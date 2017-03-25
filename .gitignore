@@ -27,3 +27,11 @@
 *.exe
 *.out
 *.app
+
+# VStudio
+*.sln
+*.vcxproj
+*.filters
+*.users
+$build
+$output

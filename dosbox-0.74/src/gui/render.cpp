@@ -514,7 +514,12 @@ static void RENDER_CallBack( GFX_CallBackFunctions_t function ) {
 	}
 }
 
-void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double ratio,bool dblw,bool dblh) {
+void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double ratio,bool dblw,bool dblh) 
+{
+	// HDD route around rendering
+	if (g_ExRunAsSlave)
+		return;
+
 	RENDER_Halt( );
 	if (!width || !height || width > SCALER_MAXWIDTH || height > SCALER_MAXHEIGHT) { 
 		return;	
@@ -565,6 +570,11 @@ static void ChangeScaler(bool pressed) {
 } */
 
 void RENDER_Init(Section * sec) {
+
+	// HDD route around rendering
+	if ( g_ExRunAsSlave )
+		return;
+		
 	Section_prop * section=static_cast<Section_prop *>(sec);
 
 	//For restarting the renderer.

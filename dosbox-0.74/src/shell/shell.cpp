@@ -296,14 +296,18 @@ void DOS_Shell::Run(void) {
 		temp.RunInternal();				// exits when no bf is found.
 		return;
 	}
-	/* Start a normal shell and check for a first command init */
-	WriteOut(MSG_Get("SHELL_STARTUP_BEGIN"),VERSION);
+
+	// Start a normal shell and check for a first command init 
+	if ( !g_ExRunAsSlave )
+	{
+		WriteOut(MSG_Get("SHELL_STARTUP_BEGIN"), DB_VERSION);
 #if C_DEBUG
-	WriteOut(MSG_Get("SHELL_STARTUP_DEBUG"));
+		WriteOut(MSG_Get("SHELL_STARTUP_DEBUG"));
 #endif
-	if (machine == MCH_CGA) WriteOut(MSG_Get("SHELL_STARTUP_CGA"));
-	if (machine == MCH_HERC) WriteOut(MSG_Get("SHELL_STARTUP_HERC"));
-	WriteOut(MSG_Get("SHELL_STARTUP_END"));
+		if (machine == MCH_CGA) WriteOut(MSG_Get("SHELL_STARTUP_CGA"));
+		if (machine == MCH_HERC) WriteOut(MSG_Get("SHELL_STARTUP_HERC"));
+		WriteOut(MSG_Get("SHELL_STARTUP_END"));
+	}
 
 	if (cmd->FindString("/INIT",line,true)) {
 		strcpy(input_line,line.c_str());
@@ -494,7 +498,7 @@ void SHELL_Init() {
 		"\033[44;1m\xC9\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBB\n"
-		"\xBA \033[32mWelcome to DOSBox v%-8s\033[37m                                        \xBA\n"
+		"\xBA \033[32mWelcome to DOSBox v%-8s\033[37m                                      \xBA\n"
 		"\xBA                                                                    \xBA\n"
 //		"\xBA DOSBox runs real and protected mode games.                         \xBA\n"
 		"\xBA For a short introduction for new users type: \033[33mINTRO\033[37m                 \xBA\n"
@@ -571,6 +575,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_PATH_HELP","Provided for compatibility.\n");
 	MSG_Add("SHELL_CMD_VER_HELP","View and set the reported DOS version.\n");
 	MSG_Add("SHELL_CMD_VER_VER","DOSBox version %s. Reported DOS version %d.%02d.\n");
+	MSG_Add("SHELL_CMD_EMIT_HELP", "[HDD] Enable or disable custom CON output capture.\n");
 
 	/* Regular startup */
 	call_shellstop=CALLBACK_Allocate();

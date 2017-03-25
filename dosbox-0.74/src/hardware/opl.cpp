@@ -27,6 +27,7 @@
 
 #include <math.h>
 #include <stdlib.h> // rand()
+#include <memory.h>
 #include "dosbox.h"
 #include "opl.h"
 

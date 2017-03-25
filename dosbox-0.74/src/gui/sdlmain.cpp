@@ -50,8 +50,11 @@
 #include "cpu.h"
 #include "cross.h"
 #include "control.h"
+#include "shell.h"
 
-#define MAPPERFILE "mapper-" VERSION ".map"
+bool g_ExRunAsSlave = false;
+
+#define MAPPERFILE "mapper-" DB_VERSION ".map"
 //#define DISABLE_JOYSTICK
 
 #if C_OPENGL
@@ -236,13 +239,13 @@ void GFX_SetTitle(Bit32s cycles,Bits frameskip,bool paused){
 	if(cycles != -1) internal_cycles = cycles;
 	if(frameskip != -1) internal_frameskip = frameskip;
 	if(CPU_CycleAutoAdjust) {
-		sprintf(title,"DOSBox %s, Cpu speed: max %3d%% cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
+		sprintf(title,"DOSBox %s, Cpu speed: max %3d%% cycles, Frameskip %2d, Program: %8s",DB_VERSION,internal_cycles,internal_frameskip,RunningProgram);
 	} else {
-		sprintf(title,"DOSBox %s, Cpu speed: %8d cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
+		sprintf(title,"DOSBox %s, Cpu speed: %8d cycles, Frameskip %2d, Program: %8s", DB_VERSION,internal_cycles,internal_frameskip,RunningProgram);
 	}
 
 	if(paused) strcat(title," PAUSED");
-	SDL_WM_SetCaption(title,VERSION);
+	SDL_WM_SetCaption(title, DB_VERSION);
 }
 
 static void PauseDOSBox(bool pressed) {
@@ -1149,14 +1152,17 @@ static void GUI_StartUp(Section * sec) {
 
 #endif	//OPENGL
 	/* Initialize screen for first time */
-	sdl.surface=SDL_SetVideoMode(640,400,0,0);
-	if (sdl.surface == NULL) E_Exit("Could not initialize video: %s",SDL_GetError());
-	sdl.desktop.bpp=sdl.surface->format->BitsPerPixel;
+	if ( !g_ExRunAsSlave )
+	{
+		sdl.surface=SDL_SetVideoMode(640,400,0,0);
+		if (sdl.surface == NULL) E_Exit("Could not initialize video: %s",SDL_GetError());
+		sdl.desktop.bpp=sdl.surface->format->BitsPerPixel;
+	}
 	if (sdl.desktop.bpp==24) {
 		LOG_MSG("SDL:You are running in 24 bpp mode, this will slow down things!");
 	}
 	GFX_Stop();
-	SDL_WM_SetCaption("DOSBox",VERSION);
+	SDL_WM_SetCaption("DOSBox", DB_VERSION);
 
 /* The endian part is intentionally disabled as somehow it produces correct results without according to rhoenie*/
 //#if SDL_BYTEORDER == SDL_BIG_ENDIAN
@@ -1170,7 +1176,9 @@ static void GUI_StartUp(Section * sec) {
 //#endif
 
 /* Please leave the Splash screen stuff in working order in DOSBox. We spend a lot of time making DOSBox. */
-	SDL_Surface* splash_surf = SDL_CreateRGBSurface(SDL_SWSURFACE, 640, 400, 32, rmask, gmask, bmask, 0);
+	SDL_Surface* splash_surf = nullptr;
+	if ( !g_ExRunAsSlave )
+      splash_surf = SDL_CreateRGBSurface(SDL_SWSURFACE, 640, 400, 32, rmask, gmask, bmask, 0);
 	if (splash_surf) {
 		SDL_FillRect(splash_surf, NULL, SDL_MapRGB(splash_surf->format, 0, 0, 0));
 
@@ -1445,7 +1453,11 @@ static BOOL WINAPI ConsoleEventHandler(DWORD event) {
 /* static variable to show wether there is not a valid stdout.
  * Fixes some bugs when -noconsole is used in a read only directory */
 static bool no_stdout = false;
-void GFX_ShowMsg(char const* format,...) {
+void GFX_ShowMsg(char const* format,...) 
+{
+	if ( g_ExRunAsSlave )
+		return;
+
 	char buf[512];
 	va_list msg;
 	va_start(msg,format);
@@ -1667,11 +1679,17 @@ static void erasemapperfile() {
 
 
 //extern void UI_Init(void);
-int main(int argc, char* argv[]) {
+extern "C" int main(int argc, char* argv[])
+{
 	try {
 		CommandLine com_line(argc,argv);
 		Config myconf(&com_line);
 		control=&myconf;
+
+		// HDD switch to slave mode
+		if (control->cmdline->FindExist("-slave"))
+			g_ExRunAsSlave = TRUE;
+
 		/* Init the configuration system and add default values */
 		Config_Add_SDL();
 		DOSBOX_Init();
@@ -1685,6 +1703,8 @@ int main(int argc, char* argv[]) {
 		if(control->cmdline->FindExist("-resetmapper")) erasemapperfile();
 
 		/* Can't disable the console with debugger enabled */
+		if ( !g_ExRunAsSlave )
+		{
 #if defined(WIN32) && !(C_DEBUG)
 		if (control->cmdline->FindExist("-noconsole")) {
 			FreeConsole();
@@ -1706,9 +1726,11 @@ int main(int argc, char* argv[]) {
 			SetConsoleTitle("DOSBox Status Window");
 		}
 #endif  //defined(WIN32) && !(C_DEBUG)
+		}
+		
 		if (control->cmdline->FindExist("-version") ||
 		    control->cmdline->FindExist("--version") ) {
-			printf("\nDOSBox version %s, copyright 2002-2010 DOSBox Team.\n\n",VERSION);
+			printf("\nDOSBox version %s, copyright 2002-2010 DOSBox Team.\n\n", DB_VERSION);
 			printf("DOSBox is written by the DOSBox Team (See AUTHORS file))\n");
 			printf("DOSBox comes with ABSOLUTELY NO WARRANTY.  This is free software,\n");
 			printf("and you are welcome to redistribute it under certain conditions;\n");
@@ -1735,27 +1757,34 @@ int main(int argc, char* argv[]) {
 #endif
 
 	/* Display Welcometext in the console */
-	LOG_MSG("DOSBox version %s",VERSION);
+	LOG_MSG("DOSBox version %s", DB_VERSION);
 	LOG_MSG("Copyright 2002-2010 DOSBox Team, published under GNU GPL.");
+	LOG_MSG("Changes for [github.com/ishani/dosbox-slave] by Harry Denholm, ishani.org");
 	LOG_MSG("---");
 
-	/* Init SDL */
+	if ( g_ExRunAsSlave )
+	{
+		sdl.inited = false;
+	}
+	else
+	{
+		/* Init SDL */
 #if SDL_VERSION_ATLEAST(1, 2, 14)
-	putenv(const_cast<char*>("SDL_DISABLE_LOCK_KEYS=1"));
+		putenv(const_cast<char*>("SDL_DISABLE_LOCK_KEYS=1"));
 #endif
-	if ( SDL_Init( SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER|SDL_INIT_CDROM
-		|SDL_INIT_NOPARACHUTE
-		) < 0 ) E_Exit("Can't init SDL %s",SDL_GetError());
-	sdl.inited = true;
+		if ( SDL_Init( SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER|SDL_INIT_CDROM
+			|SDL_INIT_NOPARACHUTE
+			) < 0 ) E_Exit("Can't init SDL %s",SDL_GetError());
+		sdl.inited = true;
 
 #ifndef DISABLE_JOYSTICK
-	//Initialise Joystick seperately. This way we can warn when it fails instead
-	//of exiting the application
-	if( SDL_InitSubSystem(SDL_INIT_JOYSTICK) < 0 ) LOG_MSG("Failed to init joystick support");
+		//Initialise Joystick seperately. This way we can warn when it fails instead
+		//of exiting the application
+		if( SDL_InitSubSystem(SDL_INIT_JOYSTICK) < 0 ) LOG_MSG("Failed to init joystick support");
 #endif
 
-	sdl.laltstate = SDL_KEYUP;
-	sdl.raltstate = SDL_KEYUP;
+		sdl.laltstate = SDL_KEYUP;
+		sdl.raltstate = SDL_KEYUP;
 
 #if defined (WIN32)
 #if SDL_VERSION_ATLEAST(1, 2, 10)
@@ -1764,29 +1793,31 @@ int main(int argc, char* argv[]) {
 		sdl.using_windib=false;
 #endif
 		char sdl_drv_name[128];
-		if (getenv("SDL_VIDEODRIVER")==NULL) {
-			if (SDL_VideoDriverName(sdl_drv_name,128)!=NULL) {
-				sdl.using_windib=false;
-				if (strcmp(sdl_drv_name,"directx")!=0) {
+		if (getenv("SDL_VIDEODRIVER") == NULL) {
+			if (SDL_VideoDriverName(sdl_drv_name, 128) != NULL) {
+				sdl.using_windib = false;
+				if (strcmp(sdl_drv_name, "directx") != 0) {
 					SDL_QuitSubSystem(SDL_INIT_VIDEO);
 					putenv("SDL_VIDEODRIVER=directx");
-					if (SDL_InitSubSystem(SDL_INIT_VIDEO)<0) {
+					if (SDL_InitSubSystem(SDL_INIT_VIDEO) < 0) {
 						putenv("SDL_VIDEODRIVER=windib");
-						if (SDL_InitSubSystem(SDL_INIT_VIDEO)<0) E_Exit("Can't init SDL Video %s",SDL_GetError());
-						sdl.using_windib=true;
+						if (SDL_InitSubSystem(SDL_INIT_VIDEO) < 0) E_Exit("Can't init SDL Video %s", SDL_GetError());
+						sdl.using_windib = true;
 					}
 				}
 			}
-		} else {
-			char* sdl_videodrv = getenv("SDL_VIDEODRIVER");
-			if (strcmp(sdl_videodrv,"directx")==0) sdl.using_windib = false;
-			else if (strcmp(sdl_videodrv,"windib")==0) sdl.using_windib = true;
 		}
-		if (SDL_VideoDriverName(sdl_drv_name,128)!=NULL) {
-			if (strcmp(sdl_drv_name,"windib")==0) LOG_MSG("SDL_Init: Starting up with SDL windib video driver.\n          Try to update your video card and directx drivers!");
+		else {
+			char* sdl_videodrv = getenv("SDL_VIDEODRIVER");
+			if (strcmp(sdl_videodrv, "directx") == 0) sdl.using_windib = false;
+			else if (strcmp(sdl_videodrv, "windib") == 0) sdl.using_windib = true;
+		}
+		if (SDL_VideoDriverName(sdl_drv_name, 128) != NULL) {
+			if (strcmp(sdl_drv_name, "windib") == 0) LOG_MSG("SDL_Init: Starting up with SDL windib video driver.\n          Try to update your video card and directx drivers!");
 		}
 #endif
-	sdl.num_joysticks=SDL_NumJoysticks();
+		sdl.num_joysticks=SDL_NumJoysticks();
+	}
 
 	/* Parse configuration files */
 	std::string config_file,config_path;
@@ -1889,7 +1920,7 @@ int main(int argc, char* argv[]) {
 		//Force visible mouse to end user. Somehow this sometimes doesn't happen
 		SDL_WM_GrabInput(SDL_GRAB_OFF);
 		SDL_ShowCursor(SDL_ENABLE);
-		throw;//dunno what happened. rethrow for sdl to catch
+		// throw;//dunno what happened. rethrow for sdl to catch
 	}
 	//Force visible mouse to end user. Somehow this sometimes doesn't happen
 	SDL_WM_GrabInput(SDL_GRAB_OFF);
@@ -1903,4 +1934,12 @@ void GFX_GetSize(int &width, int &height, bool &fullscreen) {
 	width = sdl.draw.width;
 	height = sdl.draw.height;
 	fullscreen = sdl.desktop.fullscreen;
+}
+
+// HDD called to write out a character from the CON path
+bool g_ExEmitCON = false;
+void SLV_EmitCON(char c)
+{
+	if ( g_ExEmitCON )
+		putchar(c);
 }

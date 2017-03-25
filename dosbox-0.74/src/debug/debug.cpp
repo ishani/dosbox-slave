@@ -96,9 +96,9 @@ public:
 };
 
 
-class DEBUG;
+class PDEBUG;
 
-DEBUG*	pDebugcom	= 0;
+PDEBUG*	pDebugcom	= 0;
 bool	exitLoop	= false;
 
 
@@ -1937,10 +1937,11 @@ static void LogInstruction(Bit16u segValue, Bit32u eipValue,  ofstream& out) {
 
 // DEBUG.COM stuff
 
-class DEBUG : public Program {
+// HDD renamed from DEBUG to avoid namespace clash
+class PDEBUG : public Program {
 public:
-	DEBUG()		{ pDebugcom	= this;	active = false; };
-	~DEBUG()	{ pDebugcom	= 0; };
+	PDEBUG()		{ pDebugcom	= this;	active = false; };
+	~PDEBUG()	{ pDebugcom	= 0; };
 
 	bool IsActive() { return active; };
 
@@ -2012,7 +2013,7 @@ Bitu DEBUG_EnableDebugger(void)
 };
 
 static void DEBUG_ProgramStart(Program * * make) {
-	*make=new DEBUG;
+	*make=new PDEBUG;
 }
 
 // INIT 

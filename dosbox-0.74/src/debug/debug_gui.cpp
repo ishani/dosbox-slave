@@ -52,7 +52,10 @@ extern int old_cursor_state;
 
 
 
-void DEBUG_ShowMsg(char const* format,...) {
+void DEBUG_ShowMsg(char const* format,...) 
+{
+	if (g_ExRunAsSlave)
+		return;
 	
 	char buf[512];
 	va_list msg;

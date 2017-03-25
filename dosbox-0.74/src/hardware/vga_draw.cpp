@@ -1485,7 +1485,9 @@ void VGA_SetupDrawing(Bitu /*val*/) {
 		LOG(LOG_VGA,LOG_NORMAL)("%s width, %s height aspect %f",
 			doublewidth ? "double":"normal",doubleheight ? "double":"normal",aspect_ratio);
 #endif
-		RENDER_SetSize(width,height,bpp,(float)fps,aspect_ratio,doublewidth,doubleheight);
+		// HDD HEADLESS
+		if ( !g_ExRunAsSlave )
+			RENDER_SetSize(width,height,bpp,(float)fps,aspect_ratio,doublewidth,doubleheight);
 	}
 }
 

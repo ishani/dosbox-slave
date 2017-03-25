@@ -71,11 +71,11 @@ void Cross::GetPlatformConfigDir(std::string& in) {
 
 void Cross::GetPlatformConfigName(std::string& in) {
 #ifdef WIN32
-#define DEFAULT_CONFIG_FILE "dosbox-" VERSION ".conf"
+#define DEFAULT_CONFIG_FILE "dosbox-" DB_VERSION ".conf"
 #elif defined(MACOSX)
-#define DEFAULT_CONFIG_FILE "DOSBox " VERSION " Preferences"
+#define DEFAULT_CONFIG_FILE "DOSBox " DB_VERSION " Preferences"
 #else /*linux freebsd*/
-#define DEFAULT_CONFIG_FILE "dosbox-" VERSION ".conf"
+#define DEFAULT_CONFIG_FILE "dosbox-" DB_VERSION ".conf"
 #endif
 	in = DEFAULT_CONFIG_FILE;
 }

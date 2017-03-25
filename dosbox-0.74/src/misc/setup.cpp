@@ -615,7 +615,7 @@ bool Config::PrintConfig(char const * const configfilename) const {
 	if(outfile==NULL) return false;
 
 	/* Print start of configfile and add an return to improve readibility. */
-	fprintf(outfile,MSG_Get("CONFIGFILE_INTRO"),VERSION);
+	fprintf(outfile,MSG_Get("CONFIGFILE_INTRO"), DB_VERSION);
 	fprintf(outfile,"\n");
 	for (const_it tel=sectionlist.begin(); tel!=sectionlist.end(); tel++){
 		/* Print out the Section header */

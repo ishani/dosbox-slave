@@ -62,6 +62,10 @@ extern SVGACards svgaCard;
 extern MachineType machine;
 extern bool SDLNetInited;
 
+// HDD
+extern bool g_ExRunAsSlave;
+void SLV_EmitCON( char c );
+
 #define IS_TANDY_ARCH ((machine==MCH_TANDY) || (machine==MCH_PCJR))
 #define IS_EGAVGA_ARCH ((machine==MCH_EGA) || (machine==MCH_VGA))
 #define IS_VGA_ARCH (machine==MCH_VGA)

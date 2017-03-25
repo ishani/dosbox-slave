@@ -585,6 +585,11 @@ static void INT10_TeletypeOutputAttr(Bit8u chr,Bit8u attr,bool useattr,Bit8u pag
 	case '\n':
 //		cur_col=0; //Seems to break an old chess game
 		cur_row++;
+
+		// HDD route CON to output
+		if ( g_ExRunAsSlave )
+			SLV_EmitCON('\n');
+
 		break;
 	case '\t':
 		do {
@@ -596,6 +601,11 @@ static void INT10_TeletypeOutputAttr(Bit8u chr,Bit8u attr,bool useattr,Bit8u pag
 	default:
 		/* Draw the actual Character */
 		WriteChar(cur_col,cur_row,page,chr,attr,useattr);
+
+		// HDD route CON to output
+		if ( g_ExRunAsSlave )
+			SLV_EmitCON(chr);
+
 		cur_col++;
 	}
 	if(cur_col==ncols) {

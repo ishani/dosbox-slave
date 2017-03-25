@@ -64,6 +64,7 @@ static SHELL_Cmd cmd_list[]={
 {	"SUBST",	1,			&DOS_Shell::CMD_SUBST,		"SHELL_CMD_SUBST_HELP"},
 {	"TYPE",		0,			&DOS_Shell::CMD_TYPE,		"SHELL_CMD_TYPE_HELP"},
 {	"VER",		0,			&DOS_Shell::CMD_VER,		"SHELL_CMD_VER_HELP"},
+{	"EMIT",		0,			&DOS_Shell::CMD_EMIT,		"SHELL_CMD_EMIT_HELP"},
 {0,0,0,0}
 }; 
 
@@ -1087,5 +1088,24 @@ void DOS_Shell::CMD_VER(char *args) {
 		word = StripWord(args);
 		dos.version.major = (Bit8u)(atoi(word));
 		dos.version.minor = (Bit8u)(atoi(args));
-	} else WriteOut(MSG_Get("SHELL_CMD_VER_VER"),VERSION,dos.version.major,dos.version.minor);
+	} else WriteOut(MSG_Get("SHELL_CMD_VER_VER"), DB_VERSION,dos.version.major,dos.version.minor);
+}
+
+extern bool g_ExEmitCON;
+void DOS_Shell::CMD_EMIT(char *args) 
+{
+	HELP("EMIT");
+
+	if ( args && *args )
+	{
+		char* word = StripWord(args);
+		if ( !strcasecmp(word, "on") )
+		{
+			g_ExEmitCON = true;
+		}
+		else
+		{
+			g_ExEmitCON = false;
+		}
+	}
 }
