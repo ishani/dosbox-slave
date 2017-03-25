@@ -18,5 +18,5 @@ The focus of the project is "slave" mode, where a calling process can dispatch a
 
 In this way, we can use DOSBox as an automatable DOS executable container, ideally:
 
-`DOSBox-slave -conf common.txt -conf autoexec.txt > results.txt`
+`DOSBox -conf common.txt -conf autoexec.txt -slave > results.txt`
 
