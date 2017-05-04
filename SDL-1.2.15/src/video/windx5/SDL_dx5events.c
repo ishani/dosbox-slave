@@ -140,8 +140,8 @@ struct {
 } inputs[] = {
 	{ "keyboard",
 		&GUID_SysKeyboard, &c_dfDIKeyboard,
-		(DISCL_FOREGROUND|DISCL_NONEXCLUSIVE),
-		(DISCL_FOREGROUND|DISCL_NONEXCLUSIVE), handle_keyboard },
+		(DISCL_FOREGROUND|DISCL_EXCLUSIVE),
+		(DISCL_FOREGROUND|DISCL_EXCLUSIVE), handle_keyboard },
 	{ "mouse",
 		&GUID_SysMouse,
 #if DIRECTINPUT_VERSION >= 0x700
@@ -149,8 +149,8 @@ struct {
 #else
 		&c_dfDIMouse,
 #endif
-		(DISCL_BACKGROUND|DISCL_NONEXCLUSIVE),
-		(DISCL_BACKGROUND|DISCL_NONEXCLUSIVE), handle_mouse },
+		(DISCL_BACKGROUND|DISCL_EXCLUSIVE),
+		(DISCL_BACKGROUND|DISCL_EXCLUSIVE), handle_mouse },
 	{ NULL, NULL, NULL, 0, 0, NULL }
 };
 	
