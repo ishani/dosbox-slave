@@ -251,7 +251,7 @@ static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 			}
 		}
 
-//		LOG_WARN("DISNEY:Control write %x",val);
+		LOG(LOG_MISC, LOG_NORMAL)("DISNEY:Control write %x",val);
 		if (val&0x10) LOG(LOG_MISC,LOG_ERROR)("DISNEY:Parallel IRQ Enabled");
 		disney.control=val;
 		break;
@@ -262,11 +262,11 @@ static Bitu disney_read(Bitu port,Bitu iolen) {
 	Bitu retval;
 	switch (port-DISNEY_BASE) {
 	case 0:		/* Data Port */
-//		LOG(LOG_MISC,LOG_NORMAL)("DISNEY:Read from data port");
+		LOG(LOG_MISC, LOG_NORMAL)("DISNEY:Read from data port");
 		return disney.data;
 		break;
 	case 1:		/* Status Port */	
-//		LOG(LOG_MISC,"DISNEY:Read from status port %X",disney.status);
+		LOG(LOG_MISC, LOG_NORMAL)("DISNEY:Read from status port %X",disney.status);
 		retval = 0x07;//0x40; // Stereo-on-1 and (or) New-Stereo DACs present
 		if(disney.interface_det_ext > 5) {
 			if (disney.leader && disney.leader->used >= 16){

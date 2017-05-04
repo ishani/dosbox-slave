@@ -171,7 +171,7 @@ static Bits IOFaultCore(void) {
  * games with their timing of certain operations
  */
 
-
+ /*
 #define IODELAY_READ_MICROS 1.0
 #define IODELAY_WRITE_MICROS 0.75
 
@@ -192,12 +192,13 @@ inline void IO_USEC_write_delay_old() {
 		else CPU_Cycles = 0;
 	}
 }
-
+*/
 
 #define IODELAY_READ_MICROSk (Bit32u)(1024/1.0)
 #define IODELAY_WRITE_MICROSk (Bit32u)(1024/0.75)
 
-inline void IO_USEC_read_delay() {
+inline void IO_USEC_read_delay() 
+{
 	Bits delaycyc = CPU_CycleMax/IODELAY_READ_MICROSk;
 	if(GCC_UNLIKELY(CPU_Cycles < 3*delaycyc)) delaycyc = 0; //Else port acces will set cycles to 0. which might trigger problem with games which read 16 bit values
 	CPU_Cycles -= delaycyc;

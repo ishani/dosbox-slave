@@ -65,6 +65,7 @@ static SHELL_Cmd cmd_list[]={
 {	"TYPE",		0,			&DOS_Shell::CMD_TYPE,		"SHELL_CMD_TYPE_HELP"},
 {	"VER",		0,			&DOS_Shell::CMD_VER,		"SHELL_CMD_VER_HELP"},
 {	"EMIT",		0,			&DOS_Shell::CMD_EMIT,		"SHELL_CMD_EMIT_HELP"},
+{	"TICKLOCK",	0,			&DOS_Shell::CMD_TICKLOCK,	"SHELL_CMD_TICKLOCK_HELP"},
 {0,0,0,0}
 }; 
 
@@ -1106,6 +1107,30 @@ void DOS_Shell::CMD_EMIT(char *args)
 		else
 		{
 			g_ExEmitCON = false;
+		}
+	}
+}
+
+extern bool ticksLocked;
+void DOSBOX_UnlockSpeed(bool pressed);
+
+void DOS_Shell::CMD_TICKLOCK(char *args)
+{
+	HELP("TICKLOCK");
+	WriteOut(".. was %s", ticksLocked ? "ON": "OFF");
+
+	if ( args && *args )
+	{
+		char* word = StripWord(args);
+		if ( !strcasecmp(word, "on") )
+		{
+			ticksLocked = true;
+			DOSBOX_UnlockSpeed(true);
+		}
+		else
+		{
+			ticksLocked = false;
+			DOSBOX_UnlockSpeed(false);
 		}
 	}
 }

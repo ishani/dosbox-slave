@@ -576,6 +576,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_VER_HELP","View and set the reported DOS version.\n");
 	MSG_Add("SHELL_CMD_VER_VER","DOSBox version %s. Reported DOS version %d.%02d.\n");
 	MSG_Add("SHELL_CMD_EMIT_HELP", "[HDD] Enable or disable custom CON output capture.\n");
+	MSG_Add("SHELL_CMD_TICKLOCK_HELP", "[HDD] Enable or disable the tick lock control.\n");
 
 	/* Regular startup */
 	call_shellstop=CALLBACK_Allocate();

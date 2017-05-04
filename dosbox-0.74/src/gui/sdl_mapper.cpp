@@ -2384,15 +2384,18 @@ void MAPPER_StartUp(Section * sec) {
 	mapper.sticks.num=0;
 	mapper.sticks.num_groups=0;
 	Bitu i;
-	for (i=0; i<16; i++) {
-		virtual_joysticks[0].button_pressed[i]=false;
-		virtual_joysticks[1].button_pressed[i]=false;
-		virtual_joysticks[0].hat_pressed[i]=false;
-		virtual_joysticks[1].hat_pressed[i]=false;
+
+	for (i = 0; i < MAX_VJOY_BUTTONS; i++) {
+		virtual_joysticks[0].button_pressed[i] = false;
+		virtual_joysticks[1].button_pressed[i] = false;
 	}
-	for (i=0; i<8; i++) {
-		virtual_joysticks[0].axis_pos[i]=0;
-		virtual_joysticks[0].axis_pos[i]=0;
+	for (i = 0; i < 16; i++) {
+		virtual_joysticks[0].hat_pressed[i] = false;
+		virtual_joysticks[1].hat_pressed[i] = false;
+	}
+	for (i = 0; i < 8; i++) {
+		virtual_joysticks[0].axis_pos[i] = 0;
+		virtual_joysticks[1].axis_pos[i] = 0;
 	}
 
 	usescancodes = false;

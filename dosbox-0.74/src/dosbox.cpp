@@ -147,6 +147,8 @@ static Bitu Normal_Loop(void) {
 		}
 	}
 increaseticks:
+	// printf("%10u  %10u  %10i  %10i  %10i\n", ticksScheduled, ticksDone, CPU_CycleMax, CPU_CycleLimit, CPU_IODelayRemoved);
+
 	if (GCC_UNLIKELY(ticksLocked)) {
 		ticksRemain=5;
 		/* Reset any auto cycle guessing for this frame */
@@ -157,6 +159,7 @@ increaseticks:
 	} else {
 		Bit32u ticksNew;
 		ticksNew=GetTicks();
+		
 		ticksScheduled += ticksAdded;
 		if (ticksNew > ticksLast) {
 			ticksRemain = ticksNew-ticksLast;
@@ -166,51 +169,57 @@ increaseticks:
 				ticksRemain = 20;
 			}
 			ticksAdded = ticksRemain;
-			if (CPU_CycleAutoAdjust && !CPU_SkipCycleAutoAdjust) {
-				if (ticksScheduled >= 250 || ticksDone >= 250 || (ticksAdded > 15 && ticksScheduled >= 5) ) {
-					if(ticksDone < 1) ticksDone = 1; // Protect against div by zero
+			if (CPU_CycleAutoAdjust && !CPU_SkipCycleAutoAdjust) 
+			{
+				if (ticksScheduled >= 250 || ticksDone >= 250 || (ticksAdded > 15 && ticksScheduled >= 5)) 
+				{
+					if (ticksDone < 1) ticksDone = 1; // Protect against div by zero
 					/* ratio we are aiming for is around 90% usage*/
-					Bit32s ratio = (ticksScheduled * (CPU_CyclePercUsed*90*1024/100/100)) / ticksDone;
+					Bit32s ratio = (ticksScheduled * (CPU_CyclePercUsed * 90 * 1024 / 100 / 100)) / ticksDone;
 					Bit32s new_cmax = CPU_CycleMax;
 					Bit64s cproc = (Bit64s)CPU_CycleMax * (Bit64s)ticksScheduled;
 					if (cproc > 0) {
 						/* ignore the cycles added due to the io delay code in order
 						   to have smoother auto cycle adjustments */
-						double ratioremoved = (double) CPU_IODelayRemoved / (double) cproc;
+						double ratioremoved = (double)CPU_IODelayRemoved / (double)cproc;
 						if (ratioremoved < 1.0) {
 							ratio = (Bit32s)((double)ratio * (1 - ratioremoved));
 							/* Don't allow very high ratio which can cause us to lock as we don't scale down
 							 * for very low ratios. High ratio might result because of timing resolution */
-							if (ticksScheduled >= 250 && ticksDone < 10 && ratio > 20480) 
+							if (ticksScheduled >= 250 && ticksDone < 10 && ratio > 20480)
 								ratio = 20480;
 							Bit64s cmax_scaled = (Bit64s)CPU_CycleMax * (Bit64s)ratio;
-							if (ratio <= 1024) 
+							if (ratio <= 1024)
 								new_cmax = (Bit32s)(cmax_scaled / (Bit64s)1024);
-							else 
+							else
 								new_cmax = (Bit32s)(1 + (CPU_CycleMax >> 1) + cmax_scaled / (Bit64s)2048);
 						}
 					}
 
-					if (new_cmax<CPU_CYCLES_LOWER_LIMIT)
-						new_cmax=CPU_CYCLES_LOWER_LIMIT;
+					if (new_cmax < CPU_CYCLES_LOWER_LIMIT)
+						new_cmax = CPU_CYCLES_LOWER_LIMIT;
+// 					if (new_cmax > 10000)
+// 						new_cmax = 10000;
 
 					/* ratios below 1% are considered to be dropouts due to
 					   temporary load imbalance, the cycles adjusting is skipped */
-					if (ratio>10) {
+					if (ratio > 10) {
 						/* ratios below 12% along with a large time since the last update
 						   has taken place are most likely caused by heavy load through a
 						   different application, the cycles adjusting is skipped as well */
-						if ((ratio>120) || (ticksDone<700)) {
+						if ((ratio > 120) || (ticksDone < 700)) {
 							CPU_CycleMax = new_cmax;
 							if (CPU_CycleLimit > 0) {
-								if (CPU_CycleMax>CPU_CycleLimit) CPU_CycleMax = CPU_CycleLimit;
+								if (CPU_CycleMax > CPU_CycleLimit) CPU_CycleMax = CPU_CycleLimit;
 							}
 						}
 					}
 					CPU_IODelayRemoved = 0;
 					ticksDone = 0;
 					ticksScheduled = 0;
-				} else if (ticksAdded > 15) {
+				}
+				else if (ticksAdded > 15) {
+
 					/* ticksAdded > 15 but ticksScheduled < 5, lower the cycles
 					   but do not reset the scheduled/done ticks to take them into
 					   account during the next auto cycle adjustment */
@@ -245,7 +254,7 @@ void DOSBOX_RunMachine(void){
 	} while (!ret);
 }
 
-static void DOSBOX_UnlockSpeed( bool pressed ) {
+void DOSBOX_UnlockSpeed( bool pressed ) {
 	static bool autoadjust = false;
 	if (pressed) {
 		LOG_MSG("Fast Forward ON");
@@ -273,6 +282,11 @@ static void DOSBOX_RealInit(Section * sec) {
 	ticksRemain=0;
 	ticksLast=GetTicks();
 	ticksLocked = false;
+
+	if (control->cmdline->FindExist("-ticklock", true)) {
+		ticksLocked = true;
+	}
+
 	DOSBOX_SetLoop(&Normal_Loop);
 	MSG_Init(section);
 

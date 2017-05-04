@@ -18,7 +18,7 @@ enum LOG_SEVERITIES {
 	LOG_ERROR
 };
 
-#if C_DEBUG
+#if 1
 class LOG 
 { 
 	LOG_TYPES       d_type;

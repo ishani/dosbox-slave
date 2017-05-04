@@ -20,6 +20,41 @@
 
 #include "dosbox.h"
 
+#if !C_DEBUG
+#include <stdarg.h>
+#include <stdio.h>
+
+void DEBUG_ShowMsg(char const* format, ...)
+{
+	if (g_ExRunAsSlave)
+		return;
+
+	char buf[512];
+	va_list msg;
+	va_start(msg, format);
+	vsprintf(buf, format, msg);
+	va_end(msg);
+
+	printf("%s\n", buf);
+}
+
+void LOG::operator() (char const* format, ...) 
+{
+	if (g_ExRunAsSlave)
+		return;
+
+	char buf[512];
+	va_list msg;
+	va_start(msg, format);
+	vsprintf(buf, format, msg);
+	va_end(msg);
+
+
+	printf("%s\n", buf);
+}
+#endif 
+
+
 #if C_DEBUG
 #include "control.h"
 #include <stdlib.h>

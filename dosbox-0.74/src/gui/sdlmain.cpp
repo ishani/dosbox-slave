@@ -1336,7 +1336,7 @@ void GFX_Events() {
 					if (sdl.desktop.fullscreen && !sdl.mouse.locked)
 						GFX_CaptureMouse();
 					SetPriority(sdl.priority.focus);
-					CPU_Disable_SkipAutoAdjust();
+					//CPU_Disable_SkipAutoAdjust();
 				} else {
 					if (sdl.mouse.locked) {
 #ifdef WIN32
@@ -1350,7 +1350,7 @@ void GFX_Events() {
 					}
 					SetPriority(sdl.priority.nofocus);
 					GFX_LosingFocus();
-					CPU_Enable_SkipAutoAdjust();
+					//CPU_Enable_SkipAutoAdjust();
 				}
 			}
 
